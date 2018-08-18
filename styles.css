@@ -1,0 +1,33 @@
+img {
+	display: inline-block;
+	margin: auto;
+}
+
+.Courses{
+	display: inline-block;
+	margin: 0 auto;
+}
+
+.photo{
+	display: inline-block;
+	margin: 0 auto;
+}
+
+.info{
+	display: inline-block;
+	height: 300px;
+	width: 100%;
+	margin: 0 auto;
+	margin-right: auto;
+	margin-left: auto;
+	text-align: center;
+	margin-bottom: 75px
+}
+
+.Research{
+	text-align: center;
+}
+
+.Research ul{
+	list-style-type: none;
+}
