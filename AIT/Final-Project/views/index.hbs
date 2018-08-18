@@ -1,0 +1,62 @@
+<div class="difficulty">
+	<p>Choose a difficulty: </p>
+	<input type="radio" id="choice1" name="difficulty" value="Easy">
+	<label for="choice1">Easy</label>
+
+	<input type="radio" id="choice2" name="difficulty" value="Medium">
+	<label for="choice2">Medium</label>
+
+	<input type="radio" id="choice3" name="difficulty" value="Hard">
+	<label for="choice3">Hard</label>
+</div>
+
+<div class="alert">
+	<h2>Playing on <div class="mode"><i><u id="mode">Easy</u></i></div></h2>
+</div>
+
+<div class="game">
+	<p id="rules">Rules: Control a snake on its mission for food,<br>
+	avoiding walls and the rest of your body.<br>
+	But, be careful, the more you eat, the harder it gets!</p>
+	<p id="instructions">Hit the <b>Start Button</b> to begin!<br>
+	Use the Arrow keys to move the snake!<br>
+	Login to record your high score on our official leaderboards!<br>
+
+	Too fast or slow? Change the difficulty up above to medium or hard!
+	</p>
+	<button id="startBtn">START</button>
+	<canvas id="board" width="1000" height="1000"></canvas>
+
+	<div class ="leaderboards">
+		<h3><u><i>High Scores</i></u></h3>
+		<form method="GET" action="">
+			Filter by Difficulty: <br>
+			<input type="radio" id="all" name="difficulty" value="">
+			<label for="all">All</label>
+
+			<input type="radio" id="easy" name="difficulty" value="Easy">
+			<label for="easy">Easy</label>
+
+			<input type="radio" id="medium" name="difficulty" value="Medium">
+			<label for="medium">Medium</label>
+
+			<input type="radio" id="hard" name="difficulty" value="Hard">
+			<label for="hard">Hard</label>
+
+			<input type="submit" value="Submit">
+		</form>
+		<ol>
+			{{#each scores as |s|}}
+				<li>{{ s.userID }} - {{ s.mode }} - <b>{{ s.score }}</b></li>
+			{{/each}}
+			
+		</ol>
+	</div>
+</div>
+
+
+<br>
+<br>
+<br>
+
+<script src="/js/game.js"></script>

@@ -1,0 +1,19 @@
+<div class="register">
+	<h3>Register for an account today</h3>
+	<p>Perks: <br>
+	1. Record your high scores on our official leaderboards<br>
+	2. Compare your scores with your friends and family<br>
+	3. Be the coolest G this world has ever seen<br>
+	4. Immortal life
+	</p>
+
+	{{#if message}}
+	<div class="error">{{ message }}</div>
+	{{/if}}
+
+	<form method="POST" action="">
+		Username: <input type="text" name="username"> <br>
+		Password: <input type="password" name="password"> <br><br>
+		<input type="submit">
+	</form>
+</div>

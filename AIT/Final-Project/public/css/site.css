@@ -1,0 +1,205 @@
+*{
+	background-color: #448844;
+	font-family: 'Roboto Mono';
+	font-size: 30px;
+}
+
+.mode{
+	display: inline;
+}
+
+.header h1{
+	display: block;
+	font-family: 'Montserrat', sans-serif;
+	background-color: black;
+	color: yellow;
+	font-size: 58px;
+	padding: 5px;
+}
+
+#rules{
+	color: #900C3F;
+	border-style: solid;
+	border-width: 3px;
+	font-size: 25px;
+	font-style: bold;
+}
+
+#instructions{
+	font-size: 25px;
+}
+
+.invisible{
+	visibility: hidden;
+}
+
+.endGame{
+	text-align: center;
+	font-size: 30px;
+	color: #800080;
+}
+
+#startBtn{
+	font-size: 25px;
+	position: absolute;
+}
+
+
+canvas{
+	display: inline;
+}
+
+.header .links{
+	font-size: 25px;
+	position: absolute;
+	display: block;
+	right: 0px;
+	margin: 20px;
+}
+
+.header .links a{
+	color: yellow;
+	text-decoration: none;
+	background-color: black;
+}
+
+.game{
+	width: 100%;
+	text-align: center;
+}
+
+.Score{
+	text-align: center;
+	color: #f2c539;
+	font-size: 30px;
+	font-style: italic, bold;
+}
+
+button{
+	color: yellow;
+	background-color: black;
+}
+
+.header .links a:hover{
+	background-color: #aabbcc;
+}
+
+.difficulty{
+	font-size: 18px;
+	font-style: italic;
+}
+
+input[type=submit]{
+	background-color: #9fd7e1;
+	padding: 5px;
+}
+
+input[type=submit]:hover{
+	background-color: #4682b4;
+}
+
+input[type=text]{
+	background-color: white;
+}
+
+input[type=password]{
+	background-color: white;
+}
+
+.difficulty p{
+	display: inline;
+	font-weight: bold;
+	font-size: 20px;
+}
+
+.alert{
+	text-align: center;
+}
+
+.alert h2{
+	font-size: 35px;
+	color: #900C3F;
+}
+
+.alert u{
+	font-size: 42px;
+}
+
+select{
+	background-color: white;
+}
+
+option{
+	background-color: white;
+}
+
+
+.leaderboards{
+	display: inline-block;
+	position: relative;
+	float: right;
+	font-size: 20px;
+}
+
+.leaderboards h3{
+	font-size: 25px;
+}
+
+.register{
+	text-align: center;
+}
+
+.error{
+	color: red;
+}
+
+.login{
+	text-align: center;
+}
+
+.reviews{
+	text-align: center;
+}
+
+.reviews ul{
+	list-style-position: inside;
+}
+
+.reviews .rating{
+	display: inline-block;
+	padding: 8px; 
+	border-radius: 50%;
+	color: white;
+	background-color: #74d600;
+}
+
+.add-review{
+	text-align: center;
+}
+
+.ratingValue{
+	display: inline;
+	font-weight: bold;
+	background-color: black;
+	color: white;
+	padding: 8px; 
+	border-radius: 50%;
+}
+
+.homeLink a{
+	display: inline-block;
+	text-decoration: none;
+	background-color: black;
+	width: 100%;
+	color: inherit;
+	font-family: inherit;
+}
+
+textarea{
+	background-color: white;
+	font-size: 16px;
+	width: 300px;
+	height: 150px;
+	padding: 10px;
+}
+

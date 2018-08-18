@@ -1,0 +1,29 @@
+<div class="reviews">
+
+	<h1>Enjoy all of our GLORIOUSSSSS reviews :)</h3>
+	<form method="GET" action="">
+		Filter by Rating: 
+		<select name="dropdown">
+			<option value="">All</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+		</select>
+
+		<input type="submit">
+	</form
+	<input type="submit">
+
+	<h3><b>Write a Review!</b></h3>
+	<h3><u><i>Description.....................Review</i></u></h3>
+	<ul>
+		{{#each reviews as |r|}}
+			<li>{{ r.description }} <div class="ratingValue">{{ r.value }}</li>
+			<br>
+		{{/each}}
+	</ul>
+
+</div>
+
