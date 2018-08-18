@@ -1,0 +1,651 @@
+<script src=lib4.js></script>
+
+<body bgcolor=black text=white link=white alink=white vlink=white>
+<center>
+<canvas id='canvas1' width=400 height=400></canvas>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   attribute vec3 aPos; // VERTEX ATTRIBUTES: POSITION
+   attribute vec3 aNor; //                    NORMAL
+   attribute vec2 aUV ; //                    TEXTURE U,V
+
+   uniform mat4 uPPMat;     // PERSPECTIVE PROJECTION MATRIX
+   uniform mat4 uObjectMat; // OBJECT TRANSFORMATION MATRIX
+   uniform mat4 uNormalMat; // NORMAL TRANSFORMATION MATRIX
+
+   varying   vec3 vPos; // TRANSFORMED POSITION
+   varying   vec3 vNor; // TRANSFORMED NORMAL
+   varying   vec2 vUV ;
+
+   void main() {
+      gl_Position = uPPMat * uObjectMat * vec4(aPos, 1.);
+      vPos = aPos;
+      vNor = (vec4(aNor, 0.) * uNormalMat).xyz;
+      vUV  = aUV ;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+varying vec3  vPos;
+varying vec3  vNor;
+varying vec2  vUV ;
+uniform vec3  uRGB;
+uniform mat4 uMat[2];
+uniform float uTime;
+
+void main() {
+   vec3 normal = normalize(vNor);
+   normal += noise(vec3(1., 1., sin(uTime)));
+   vec3 lDir = normalize(vec3(1, 2, 0));
+   float c = 0.1 + 0.9 * max(0.,
+             dot(normal, lDir)) + noise(vec3(sin(uTime), 1., 0.));
+   vec3 color = uRGB * c + noise(vec3(1.,cos(uTime), 1.));
+   gl_FragColor = vec4(sqrt(color), 1.0);
+
+   /*
+    
+
+   //FIRST 3 SPHERES ARE STATIC, FORM THE SNOWMAN
+
+   // SECOND SPHERE, USING SAME TRIANGLE STRIP
+
+   objMat1[13] *= -1;     // JUST MODIFYING THE MATRIX
+   //objMat1[14] *= -1;
+   norMat1 = matrixInvert(objMat1);
+
+   let t = .5 + .5 * Math.sin(3 * time); // ANIMATE COLOR
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [1, 1, 1]);
+   drawBuffer(gl);                     // SECOND DRAW CALL
+
+   // THIRD SPHERE
+
+   objMat1[13] *= -3.05;
+   norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [1, 1, 1]);
+   drawBuffer(gl);                     // SECOND DRAW CALL
+
+   // GENERATE FIVE SPHERES TO CREATE HAT
+
+   //HAT'S COLOR IS NON-STATIC, CONSTANTLY CHANGING
+
+   objMat1[12] = -0.5;
+   objMat1[13] *= -1.1;
+   objMat1[0] *= 0.7;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+   objMat1[15] *= 1.3;
+   norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+
+   objMat1[12] *= -1;
+   norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+   
+   objMat1[12] *= 0;
+    norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+   
+   objMat1[12] = -0.3;
+   objMat1[13] *= 1.4;
+    norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+   
+   objMat1[12] *= -0.7;
+    norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+
+   const xVal = objMat1[12];
+   const yVal = objMat1[13];
+   const zVal = objMat1[14];
+
+   //CREATE SNOW
+
+   const top = objMat1[13];
+   objMat1[0] *= 0.5;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+
+   objMat1[12] = -1;
+   let val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+   objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+  objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+  objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+  objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+  objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+  objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+     objMat1[13] = 3*Math.sin(time) + val;
+
+     setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+     setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+     setUniform('3fv', 'uRGB', [10, 10, 10]);
+     drawBuffer(gl); 
+
+     val += 0.5;
+  }
+
+  //CREATE THE EYES AND NOSE OF THE SNOWMAN
+
+   objMat1[0] *= 0.5;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+
+   objMat1[12] = -0.55 * xVal;
+   objMat1[13] = 0.2 * yVal;
+   objMat1[14] = -1 * zVal;
+
+   norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [0, 0, 0.1]);
+   drawBuffer(gl); 
+
+   objMat1[12] += 0.25;
+
+   norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [0, 0, 0.1]);
+   drawBuffer(gl); 
+
+   objMat1[0] *= 0.5;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+
+   objMat1[12] *= 0.125;
+   objMat1[13] -= 0.125;
+
+   norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [0.7, 0.2, 0.1]);
+   drawBuffer(gl); 
+   */
+}</script>
+
+<script id='instructions' type='text/html'><font color=#b0b0b0>
+<b>Description</b>
+<p>
+Using the given code as a template, I created my
+own animated scene of a snowman in a snowstorm.
+
+While three spheres form the base of the snowman,
+the hat is made up of constantly color-changing ellipses.
+The eyes and carrot-nose are three separate spheres, with
+the eyes and nose varying in color.
+
+The snow itself is a series of hundreds of smaller spheres
+with a smaller z-dimension point that are constantly moving.
+Their movement is transformed using a sin function.
+<br><br>
+All the code I wrote on top of the base code provided is outside
+of the shader code. The exact code I used is commented into the fragment
+shader, so that it is visible in the browser window.
+<br><br>
+For extra credit, I messed around with the lighting and the procedural texture of the snowman
+by adding in the noise function.
+</script>
+   
+<script>
+var vs = my_vertex_shader.innerHTML,
+    fs = my_fragment_shader.innerHTML;
+    fs = fs.substring(1, fs.length);
+
+document.body.innerHTML = [''
+   ,'<center><font size=6 color=#b0b0b0>Rendering a Snowman in a Snow Storm as Triangle Strips</center>'
+   ,'<TABLE cellspacing=0 cellpadding=0><TR>'
+   ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
+   ,'</TR><TR>'
+   ,'<table cellspacing=10>'
+   ,'<tr>'
+   ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
+   ,'<td valign=top>'
+   ,'<textArea id=textArea spellcheck=false '
+   ,'style="font:16px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'></textArea>'
+   ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
+   ,'<td valign=top><font size=5>' + instructions.innerHTML + '</td>'
+   ,'</tr></table>'
+   ,'</TR></TABLE>'
+   ].join('');
+
+var i, text = fs.split('\n'), cols = 0;
+for (i = 0 ; i < text.length ; i++)
+   cols = Math.max(cols, text[i].length);
+
+textArea.rows = text.length;
+textArea.cols = cols;
+textArea.value = fs;
+textArea.style.backgroundColor = '#202020';
+textArea.style.color = 'white';
+textArea.onkeyup = function() { canvas1.setShaders(vs, this.value); }
+
+var startTime = Date.now();
+
+// RETURNS ONE VERTEX OF A UNIT SPHERE, GIVEN PARAMETRIC u,v
+
+function sphereVertex(u, v) {
+  let theta = 2 * Math.PI * u;
+  let phi   = Math.PI * (v - .5);
+  let x = Math.cos(phi) * Math.cos(theta);
+  let y = Math.cos(phi) * Math.sin(theta);
+  let z = Math.sin(phi);
+  return [x, y, z,  x, y, z,  u, v];
+}
+
+// CREATE A PARAMETRIC SHAPE AS A SINGLE TRIANGLE STRIP
+
+function createParametricShape(func, nu, nv) {
+  let vertices = [];
+  for (let j = 0 ; j < nv ; j++) {
+     let v0 =  j    / nv;
+     let v1 = (j+1) / nv;
+     for (let i = 0 ; i <= nu ; i++) {
+        let u = i / nu;
+	if (j % 2)
+	   u = 1 - u;
+	vertices = vertices.concat(func(u, v0));
+	vertices = vertices.concat(func(u, v1));
+     }
+  }
+  return vertices;
+}
+
+// GENERATE THE TRIANGLE STRIP FOR A SPHERE
+
+var sphereTriangleStrip = createParametricShape(sphereVertex, 90, 50);
+
+function animate(gl) {
+   let time = (Date.now() - startTime) / 1000;
+
+   setUniform('1f', 'uTime', time);
+   setUniform('3fv', 'uCursor', cursor);
+
+   var zRange = 10; // DEFINE A RANGE FOR Z VALUES
+   var fl = 3;      // FOCAL LENGTH OF VIRTUAL CAMERA
+
+   // DEFINE THE PERSPECTIVE PROJECTION MATRIX
+
+   setUniform('Matrix4fv', 'uPPMat', false, [
+          1,  0,         0,     0,
+          0,  1,         0,     0,
+          0,  0, -1/zRange, -1/fl,
+          0,  0,         0,     1,
+   ]);
+
+
+   // SEND SPHERE GEOMETRY DOWN TO GPU AS A TRIANGLE STRIP
+
+   setBuffer(gl, sphereTriangleStrip);
+
+
+   // FIRST SPHERE, USING SAME TRIANGLE STRIP
+
+   let c = Math.cos(1.3 * time);
+   let s = Math.sin(1.3 * time);
+
+   let objMat1 = [
+         0.5,   0,  0, 0,    // uObjectMat SCALES UNIFORMLY
+         0,   0.5,  0, 0,
+         0,   0,  0.5, 0,
+         0, -.3, -1.2, 1,
+   ];
+   let norMat1 = matrixInvert(objMat1);
+
+   setUniform('1f', 'uTime', time);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [1, 1, 1]);
+   drawBuffer(gl);                     // FIRST DRAW CALL
+
+
+   /*
+		EVERYTHING BELOW IS MY OWN WORK
+   */
+
+   //FIRST 3 SPHERES ARE STATIC, FORM THE SNOWMAN
+
+   // SECOND SPHERE, USING SAME TRIANGLE STRIP
+
+   objMat1[13] *= -1;     // JUST MODIFYING THE MATRIX
+   //objMat1[14] *= -1;
+   norMat1 = matrixInvert(objMat1);
+
+   let t = .5 + .5 * Math.sin(3 * time); // ANIMATE COLOR
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [1, 1, 1]);
+   drawBuffer(gl);                     // SECOND DRAW CALL
+
+   // THIRD SPHERE
+
+   objMat1[13] *= -3.05;
+   norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [1, 1, 1]);
+   drawBuffer(gl);                     // SECOND DRAW CALL
+
+   // GENERATE FIVE SPHERES TO CREATE HAT
+
+   //HAT'S COLOR IS NON-STATIC, CONSTANTLY CHANGING
+
+   objMat1[12] = -0.5;
+   objMat1[13] *= -1.1;
+   objMat1[0] *= 0.7;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+   objMat1[15] *= 1.3;
+   norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+
+   objMat1[12] *= -1;
+   norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+   
+   objMat1[12] *= 0;
+    norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+   
+   objMat1[12] = -0.3;
+   objMat1[13] *= 1.4;
+    norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+   
+   objMat1[12] *= -0.7;
+    norMat1 = matrixInvert(objMat1);
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [t, 0, 1-t]);
+   drawBuffer(gl); 
+
+   const xVal = objMat1[12];
+   const yVal = objMat1[13];
+   const zVal = objMat1[14];
+
+   //CREATE SNOW
+
+   /*
+		THE SNOW IS MODELLELED BY 100 SPHERES
+		THE Y-DIRECTION TRANSFORMATION IS MADE
+		USING A SIN CURVE
+   */
+
+   const top = objMat1[13];
+   objMat1[0] *= 0.5;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+
+   objMat1[12] = -1;
+   let val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+   objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+	objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+	objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+	objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+	objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+	objMat1[12] += 0.4;
+   val = 0;
+
+   for(let i = 0; i < 100; i++){
+
+	   objMat1[13] = 3*Math.sin(time) + val;
+
+	   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+	   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+	   setUniform('3fv', 'uRGB', [10, 10, 10]);
+	   drawBuffer(gl); 
+
+	   val += 0.5;
+	}
+
+	//CREATE THE EYES AND NOSE OF THE SNOWMAN
+
+	 objMat1[0] *= 0.5;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+
+   objMat1[12] = -0.55 * xVal;
+   objMat1[13] = 0.2 * yVal;
+   objMat1[14] = -1 * zVal;
+
+   norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [0, 0, 0.1]);
+   drawBuffer(gl); 
+
+   objMat1[12] += 0.25;
+
+   norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [0, 0, 0.1]);
+   drawBuffer(gl); 
+
+   objMat1[0] *= 0.5;
+   objMat1[5] *= 0.5;
+   objMat1[10] *= 0.5;
+
+   objMat1[12] *= 0.125;
+   objMat1[13] -= 0.125;
+
+   norMat1 = matrixInvert(objMat1);
+
+   setUniform('Matrix4fv', 'uObjectMat', false, objMat1);
+   setUniform('Matrix4fv', 'uNormalMat', false, norMat1);
+   setUniform('3fv', 'uRGB', [0.7, 0.2, 0.1]);
+   drawBuffer(gl); 
+}
+
+gl_start(canvas1, vs, fs);
+</script>
+

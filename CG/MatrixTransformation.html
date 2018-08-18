@@ -1,0 +1,340 @@
+<script src=lib3.js></script>
+
+<body bgcolor=black text=white link=white alink=white vlink=white>
+<center>
+<canvas id='canvas1' width=400 height=400></canvas>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   uniform float uTime;
+   attribute vec3 aPos;
+   varying   vec3 vPos;
+   uniform vec3 uCursor;
+   uniform mat4 translate;
+   void main() {
+      
+      gl_Position = vec4(aPos, 1.);
+      if(uTime < 5.){
+        gl_Position += translate* vec4(uCursor.x*uCursor.z, uCursor.y*uCursor.z, aPos.z, 1.);
+      }
+      else
+         gl_Position = vec4(aPos, 1.);
+      vPos = aPos;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+uniform float uTime;
+varying vec3  vPos;
+uniform mat4  translate; //different matrix for each transformation
+uniform mat4 identity;
+uniform mat4 rotateX;
+uniform mat4 rotateY;
+uniform mat4 rotateZ;
+uniform mat4 scale;
+uniform mat4 scale2;
+uniform mat4 shrink;
+uniform vec4 uS[4];	//array of spheres
+uniform mat4 uM[2]; //array of matrices
+uniform vec4 uC[4]; //array of colors
+uniform vec3 uCursor;
+
+vec4 raySph(vec3 V,vec3 W,vec4 S) {// TRACE RAY
+   vec3  P = S.xyz - V;            // TO SPHERE
+   float b = dot(W, P);
+   float d = b * b - dot(P, P) + S.w * S.w;
+   float t = b - sqrt(d);
+   return vec4(V + t*W, step(0.,d)*step(0.,t));
+}
+
+mat4 matMult(mat4 A, mat4 B){ //matrix multiplication
+	vec4 x = vec4(A[0][0], A[1][0], A[2][0], A[3][0]); //rows of first matrix
+	vec4 y = vec4(A[0][1], A[1][1], A[2][1], A[3][1]);
+	vec4 z = vec4(A[0][2], A[1][2], A[2][2], A[3][2]);
+	vec4 w = vec4(A[0][3], A[1][3], A[2][3], A[3][3]);
+
+	x = x * B[0]; //multiply by columns of other matrix
+	y = y * B[1];
+	z = z * B[2];
+	w = w * B[3];
+
+	mat4 C = mat4(x, y, z, w); //return final matrix
+	return C;
+}
+
+void main() {
+
+   float f = 5.;                // FOCAL LENGTH
+   vec3 color = vec3(0.,0.,.1); // BACKGD COLOR
+   vec3 V = vec3(0., 0., f);    // CREATE RAY
+   vec3 W = normalize(vec3(vPos.xy, -f));
+
+   for(int i = 0; i < 4 ; i++){ //parse through uS array to draw all spheres
+	   vec4 S = uS[i]; // DEFINE SPHERE
+
+	   vec3 C = S.xyz;           // SEPARATE CENTER
+	   float r = S.w;                 // AND RADIUS
+	   if(uTime <= 2.)
+	   	C = (identity * vec4(C, 1.)).xyz;  // APPLY identity
+	   else if(uTime > 2. && uTime < 8.)
+	   	C = (translate * vec4(C, 1.)).xyz;  // APPLY transformation
+	   else if(uTime >= 8. && uTime < 13.)
+	   	C = (rotateX * vec4(C, 1.)).xyz;  // APPLY rotation about x
+	   else if(uTime >= 13. && uTime < 18.)
+	   	C = (rotateY * vec4(C, 1.)).xyz;  // APPLY rotation about y
+	   else if(uTime >= 18. && uTime < 23.)
+	   	C = (rotateZ * vec4(C, 1.)).xyz;  // APPLY rotation about z
+	   else if(uTime >= 23. && uTime <= 28.)
+	   	C = (scale * vec4(C, 1.)).xyz;  // APPLY scale smaller
+	   else if(uTime > 28. && uTime <= 33.)
+	   	C = (scale2 * vec4(C, 1.)).xyz; // APPLY scale larger
+	   else if(uTime > 33. && uTime <= 36.)
+	   	r = (shrink * S).w; //APPLY srhink
+	   else if(uTime > 36. && uTime <= 43.){
+		   if(i / 2 == 0){
+		   		C = (uM[0] * vec4(C, 1.)).xyz; //use array of matrices for different transformations
+		   }
+		   else{
+		   		C = (uM[1] * vec4(C, 1.)).xyz;
+		   }
+		}
+		else{
+			C = (matMult(rotateY, rotateZ) * vec4(C, 1.)).xyz; //combine transformations with matrix multiplication
+		}
+
+      C.x += uCursor.x * uCursor.z;
+      C.y += uCursor.y * uCursor.z;
+
+	   vec4 P = raySph(V,W,vec4(C,r));// SHOOT RAY:
+	   if (P.w > 0.) {                // IF IT HITS
+	      vec3 N = (P.xyz - C) / r;   // DO SHADING
+	      vec3 L = normalize(vec3(1.,1.,1.));
+	      float c = .1 + .9 * max(0., dot(N, L));
+         color = uC[i].rgb * c;
+	   }
+	}
+   gl_FragColor = vec4(sqrt(color), 1.0);
+
+   /*
+		setUniform('4fv', 'uS', [-.5, .5, 0, .2, .5, 0.5, 0, .2, -.5, -.5, 0, .2, .5, -.5, 0, .2]); //create uS array
+
+   setUniform('Matrix4fv', 'uM', false, [
+   						1, 0, 0, 0,
+                        0, 1, 0, 0,
+					    0, 0, 1, 0,
+					    x, y, z, 1,
+
+					    1, 0, 0, 0,
+						0, Math.cos(t), Math.sin(t), 0,
+						0, -1*Math.sin(t), Math.cos(t), 0,
+						0, 0, 0, 1]);
+
+   // EXAMPLE OF SETTING UNIFORM SHADER VARIABLE uMat
+
+   //Create Translation Matrix for all directions
+   setUniform('Matrix4fv', 'translate', false, [ 1, 0, 0, 0,
+                                            0, 1, 0, 0,
+					    0, 0, 1, 0,
+					    x, y, z, 1]);
+
+
+   //Create Identity Matrix
+   setUniform('Matrix4fv', 'identity', false, [ 1, 0, 0, 0,
+                                                0, 1, 0, 0,
+                                                0, 0, 1, 0,
+                                                0, 0, 0, 1]);
+
+   //create matrix to scale smaller
+   setUniform('Matrix4fv', 'scale', false, [0.1, 0, 0, 0,
+                                             0, 0.1, 0, 0,
+                                             0, 0, 0.1, 0,
+                                             0, 0, 0, 1]);
+   //matrix to scale bigger
+   setUniform('Matrix4fv', 'scale2', false, [1.5, 0, 0, 0,
+                                             0, 1.5, 0, 0,
+                                             0, 0, 1.5, 0,
+                                             0, 0, 0, 1]);
+
+   setUniform('Matrix4fv', 'shrink', false, [1, 0, 0, 0,
+                                             0, 1, 0, 0,
+                                             0, 0, 1, 0,
+                                             0, 0, 0, .1]);
+
+   //create matrix to rotate about y
+   setUniform('Matrix4fv', 'rotateY', false, [Math.cos(3*time), 0, -Math.sin(3*time), 0,
+                                                0, 1, 0, 0,
+                                                Math.sin(3*time), 0, Math.cos(3*time), 0,
+                                                0, 0, 0, 1]);
+   //create matrix to rotate about z
+   setUniform('Matrix4fv', 'rotateZ', false, [Math.cos(4*time), Math.sin(4*time), 0, 0,
+                                                -Math.cos(4*time), Math.cos(4*time), 0, 0,
+                                                0, 0, 1, 0,
+                                                0, 0, 0, 1]);
+       //create matrix to rotate about x
+   setUniform('Matrix4fv', 'rotateX', false, [1, 0, 0, 0,
+   												0, Math.cos(t), Math.sin(t), 0,
+   												0, -1*Math.sin(t), Math.cos(t), 0,
+   												0, 0, 0, 1]);
+   */
+
+}</script>
+
+<script id='instructions' type='text/html'><font color=#b0b0b0>
+<b>Description</b>
+<p>
+All of the basic matrix transformation primitives are demonstrated<br>
+in this program. They were all implemented by usage of separate<br>
+matrices. They do not come all at once, but instead at different<br>
+waves on all 4 spheres. I was also able to implement the two extra<br>
+credit tasks, and these are shown as the last two waves.
+<br>
+<br>
+The first wave is the identity matrix, so the spheres stay in place.<br>
+This only lasts 3 seconds, while all others last 5. Then, the spheres translate<br>
+in the x, y, and z directions. Then, they rotate about the x-axis, followed by the<br>
+y-axis, and finally followed by the z-axis. Two scale matrices were created, one to<br>
+shrink the spheres, and the latter to enlarge them. The last primitive transformation made simply<br>
+reduces the size of each sphere by altering their radii. Then, by passing in an array of<br>
+matrices, I made two spheres translate while the other two rotate about the X axis.<br>
+Finally, I was able to implement matrix multiplication, so I combined rotations about<br>
+the Y-axis and Z-axis to come up with a fun animation.<br><br>
+So, in order, the transformations are:<br>
+   Identity<br>
+   Translation (all directions)<br>
+   Rotate in X Direction<br>
+   Rotate in Y Direction<br>
+   Rotate in Z Direction<br>
+   Scale smaller<br>
+   Scale larger<br>
+   Reduce size of each sphere<br>
+   Two spheres translate, other two rotate about X axis<br>
+   Rotation in Y and Z axes (together)<br><br>
+
+Also, as you can see, in the first 5 seconds, the canvas itself<br>
+can be moved with the cursor as it translates.<br>
+
+</script>
+   
+<script>
+var vs = my_vertex_shader.innerHTML,
+    fs = my_fragment_shader.innerHTML;
+    fs = fs.substring(1, fs.length);
+
+document.body.innerHTML = [''
+   ,'<center><font size=6 color=#b0b0b0>Assignment 4: Matrix Transformations</center>'
+   ,'<TABLE cellspacing=0 cellpadding=0><TR>'
+   ,'<td width=50></td><td><font color=red size=5><div id=errorMessage>&nbsp;</div></font></td>'
+   ,'</TR><TR>'
+   ,'<table cellspacing=10>'
+   ,'<tr>'
+   ,'<td valign=top><font size=2 color=red><div id=errorMarker>&nbsp;</div></font></td>'
+   ,'<td valign=top>'
+   ,'<textArea id=textArea spellcheck=false '
+   ,'style="font:16px courier;outline-width:0;border-style:none;resize:none;overflow:scroll;"'
+   ,'></textArea>'
+   ,'</td><td valign=top>' + document.body.innerHTML + '</td>'
+   ,'<td valign=top><font size=5>' + instructions.innerHTML + '</td>'
+   ,'</tr></table>'
+   ,'</TR></TABLE>'
+   ].join('');
+
+var i, text = fs.split('\n'), cols = 0;
+for (i = 0 ; i < text.length ; i++)
+   cols = Math.max(cols, text[i].length);
+
+textArea.rows = text.length;
+textArea.cols = cols;
+textArea.value = fs;
+textArea.style.backgroundColor = '#202020';
+textArea.style.color = 'white';
+textArea.onkeyup = function() { canvas1.setShaders(vs, this.value); }
+
+var startTime = Date.now();
+
+function animate(gl) {
+   setUniform('3fv', 'uCursor', cursor);
+
+   let time = (Date.now() - startTime) / 1000;
+   setUniform('1f', 'uTime', time);
+
+   let t = 2*time;
+
+
+   let z = Math.sin(2*time);
+   let x = Math.sin(time);
+   let y = Math.sin(0.8 * time);
+
+   setUniform('4fv', 'uS', [-.5, .5, 0, .2, .5, 0.5, 0, .2, -.5, -.5, 0, .2, .5, -.5, 0, .2]); //create uS array
+
+   setUniform('Matrix4fv', 'uM', false, [
+   						1, 0, 0, 0,
+                        0, 1, 0, 0,
+					    0, 0, 1, 0,
+					    x, y, z, 1,
+
+					    1, 0, 0, 0,
+						0, Math.cos(t), Math.sin(t), 0,
+						0, -1*Math.sin(t), Math.cos(t), 0,
+						0, 0, 0, 1]);
+
+   setUniform('4fv', 'uC', [
+                             .1, .2, .3, 1.,
+                             .2, .3, .1, 1.,
+                             .3, .1, .2, 1.,
+                             .3, .2, .1, 1.,
+            ]);
+
+   // EXAMPLE OF SETTING UNIFORM SHADER VARIABLE uMat
+
+   //Create Translation Matrix for all directions
+   setUniform('Matrix4fv', 'translate', false, [ 1, 0, 0, 0,
+                                            0, 1, 0, 0,
+					    0, 0, 1, 0,
+					    x, y, z, 1]);
+
+
+   //Create Identity Matrix
+   setUniform('Matrix4fv', 'identity', false, [ 1, 0, 0, 0,
+                                                0, 1, 0, 0,
+                                                0, 0, 1, 0,
+                                                0, 0, 0, 1]);
+
+   //create matrix to scale smaller
+   setUniform('Matrix4fv', 'scale', false, [0.1, 0, 0, 0,
+                                             0, 0.1, 0, 0,
+                                             0, 0, 0.1, 0,
+                                             0, 0, 0, 1]);
+   //matrix to scale bigger
+   setUniform('Matrix4fv', 'scale2', false, [1.5, 0, 0, 0,
+                                             0, 1.5, 0, 0,
+                                             0, 0, 1.5, 0,
+                                             0, 0, 0, 1]);
+
+   setUniform('Matrix4fv', 'shrink', false, [1, 0, 0, 0,
+                                             0, 1, 0, 0,
+                                             0, 0, 1, 0,
+                                             0, 0, 0, .1]);
+
+   //create matrix to rotate about y
+   setUniform('Matrix4fv', 'rotateY', false, [Math.cos(3*time), 0, -Math.sin(3*time), 0,
+                                                0, 1, 0, 0,
+                                                Math.sin(3*time), 0, Math.cos(3*time), 0,
+                                                0, 0, 0, 1]);
+   //create matrix to rotate about z
+   setUniform('Matrix4fv', 'rotateZ', false, [Math.cos(4*time), Math.sin(4*time), 0, 0,
+                                                -Math.cos(4*time), Math.cos(4*time), 0, 0,
+                                                0, 0, 1, 0,
+                                                0, 0, 0, 1]);
+       //create matrix to rotate about x
+   setUniform('Matrix4fv', 'rotateX', false, [1, 0, 0, 0,
+   												0, Math.cos(t), Math.sin(t), 0,
+   												0, -1*Math.sin(t), Math.cos(t), 0,
+   												0, 0, 0, 1]);
+
+
+}
+
+gl_start(canvas1, vs, fs);
+</script>
+
