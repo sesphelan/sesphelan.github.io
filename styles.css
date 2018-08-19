@@ -3,6 +3,10 @@ img {
 	margin: auto;
 }
 
+.banner > a{
+	display: inline;
+}
+
 .Courses{
 	display: inline-block;
 	margin: 0 auto;
